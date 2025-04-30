@@ -81,45 +81,20 @@ export function useCamera(cameraId: string): UseCameraResult {
       };
 
       ws.onerror = (event: WebSocketErrorEvent) => {
-        // 基本錯誤資訊
-        const timestamp = new Date().toISOString();
+        const errorTime = new Date().toISOString();
         const readyStateText = ws.readyState === 0 ? '正在連接' :
                              ws.readyState === 1 ? '已連接' :
                              ws.readyState === 2 ? '正在關閉' :
                              ws.readyState === 3 ? '已關閉' : '未知狀態';
 
-        // 取得錯誤訊息
-        let errorMessage = '未知錯誤';
-        if (event.error instanceof Error) {
-          errorMessage = `${event.error.name}: ${event.error.message}`;
-        } else if (typeof event.message === 'string') {
-          errorMessage = event.message;
-        }
+        const errorMessage = event.error instanceof Error 
+          ? `${event.error.name}: ${event.error.message}`
+          : typeof event.message === 'string' 
+            ? event.message 
+            : '未知錯誤';
 
-        // 記錄基本錯誤資訊
-        console.error('WebSocket 連接錯誤 - 基本資訊：');
-        console.error('時間：', timestamp);
-        console.error('錯誤訊息：', errorMessage);
-        console.error('連接 URL：', wsUrl);
-        console.error('連接狀態：', readyStateText);
-        console.error('狀態碼：', ws.readyState);
-
-        // 記錄技術細節
-        console.error('WebSocket 連接錯誤 - 技術細節：');
-        try {
-          console.error('協議：', ws.protocol || '無');
-          console.error('擴展：', ws.extensions || '無');
-          console.error('二進制類型：', ws.binaryType);
-          console.error('緩衝區大小：', ws.bufferedAmount);
-        } catch (e) {
-          console.error('無法獲取完整的協議資訊：', e instanceof Error ? e.message : String(e));
-        }
-
-        // 記錄錯誤堆疊（如果有）
-        if (event.error instanceof Error && event.error.stack) {
-          console.error('錯誤堆疊：');
-          console.error(event.error.stack);
-        }
+        // 簡化錯誤日誌
+        console.error(`WebSocket 連接錯誤 - ${errorTime} - ${errorMessage} - ${wsUrl} - ${readyStateText}`);
 
         // 更新狀態
         setError(new Error(`攝影機連接錯誤: ${errorMessage}`));
